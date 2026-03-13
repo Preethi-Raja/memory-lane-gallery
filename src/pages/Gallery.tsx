@@ -151,7 +151,7 @@ const Gallery = () => {
             {photos.map((photo) => (
               <div
                 key={photo.id}
-                className="break-inside-avoid rounded-xl overflow-hidden bg-card shadow-sm hover:shadow-md transition-shadow"
+                className="group relative break-inside-avoid rounded-xl overflow-hidden bg-card shadow-sm hover:shadow-md transition-shadow"
               >
                 <img
                   src={photo.image_url}
@@ -159,6 +159,23 @@ const Gallery = () => {
                   className="w-full h-auto object-cover"
                   loading="lazy"
                 />
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <button className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-destructive/80 hover:bg-destructive text-destructive-foreground rounded-full p-1.5">
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Delete photo?</AlertDialogTitle>
+                      <AlertDialogDescription>This action cannot be undone.</AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={() => deletePhoto(photo)}>Delete</AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </div>
             ))}
           </div>
