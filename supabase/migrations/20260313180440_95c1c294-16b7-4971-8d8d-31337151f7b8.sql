@@ -1,0 +1,1 @@
+CREATE POLICY "Anyone can delete photos" ON public.photos FOR DELETE TO public USING (true);

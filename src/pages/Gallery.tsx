@@ -1,7 +1,18 @@
 import { useState, useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
-import { Camera, Upload, ImageIcon, Loader2 } from "lucide-react";
+import { Camera, Upload, ImageIcon, Loader2, Trash2 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
@@ -50,6 +61,27 @@ const Gallery = () => {
       toast.error("Failed to upload: " + err.message);
     } finally {
       setUploading(false);
+    }
+  }, [refetch]);
+
+  const deletePhoto = useCallback(async (photo: { id: string; image_url: string }) => {
+    try {
+      // Extract filename from URL
+      const url = new URL(photo.image_url);
+      const pathParts = url.pathname.split("/");
+      const fileName = pathParts[pathParts.length - 1];
+
+      // Delete from storage
+      await supabase.storage.from("photos").remove([fileName]);
+
+      // Delete from database
+      const { error } = await supabase.from("photos").delete().eq("id", photo.id);
+      if (error) throw error;
+
+      toast.success("Photo deleted!");
+      refetch();
+    } catch (err: any) {
+      toast.error("Failed to delete: " + err.message);
     }
   }, [refetch]);
 
@@ -119,7 +151,7 @@ const Gallery = () => {
             {photos.map((photo) => (
               <div
                 key={photo.id}
-                className="break-inside-avoid rounded-xl overflow-hidden bg-card shadow-sm hover:shadow-md transition-shadow"
+                className="group relative break-inside-avoid rounded-xl overflow-hidden bg-card shadow-sm hover:shadow-md transition-shadow"
               >
                 <img
                   src={photo.image_url}
@@ -127,6 +159,23 @@ const Gallery = () => {
                   className="w-full h-auto object-cover"
                   loading="lazy"
                 />
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <button className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-destructive/80 hover:bg-destructive text-destructive-foreground rounded-full p-1.5">
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Delete photo?</AlertDialogTitle>
+                      <AlertDialogDescription>This action cannot be undone.</AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={() => deletePhoto(photo)}>Delete</AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </div>
             ))}
           </div>
