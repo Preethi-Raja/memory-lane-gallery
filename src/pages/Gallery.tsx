@@ -64,6 +64,27 @@ const Gallery = () => {
     }
   }, [refetch]);
 
+  const deletePhoto = useCallback(async (photo: { id: string; image_url: string }) => {
+    try {
+      // Extract filename from URL
+      const url = new URL(photo.image_url);
+      const pathParts = url.pathname.split("/");
+      const fileName = pathParts[pathParts.length - 1];
+
+      // Delete from storage
+      await supabase.storage.from("photos").remove([fileName]);
+
+      // Delete from database
+      const { error } = await supabase.from("photos").delete().eq("id", photo.id);
+      if (error) throw error;
+
+      toast.success("Photo deleted!");
+      refetch();
+    } catch (err: any) {
+      toast.error("Failed to delete: " + err.message);
+    }
+  }, [refetch]);
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) uploadPhoto(file);
